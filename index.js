@@ -7,7 +7,7 @@ const addTask = (text, list) => {
     task.id = nextID;
     task.innerHTML = 
     `<p class="task-text">This is a dummy task.</p>
-        <input class="task-edit" type="text">
+        <input class="task-edit hide" type="text">
         <div class="task-controls">
             <button class="btn-edit-task">&#8634;</button>
             <button class="btn-delete-task">&times;</button>
@@ -27,19 +27,69 @@ const addTask = (text, list) => {
 const handleClick = (event) => {
     const task = event.currentTarget;
 
+    const targetClassList = event.target.classList;
+
+    //check for click in edit box
+    if (targetClassList.contains('task-edit')) {
+        console.log('click on edit input');
+        return; // do nothing
+    }
+
     //check for delete
-    if (event.target.classList.contains('btn-delete-task')) {
-        console.log(`delete task ${task.id}: ${task.firstChild.innerContent}`);
+    if (targetClassList.contains('btn-delete-task')) {
         task.removeEventListener('click', handleClick);
         task.remove();
         return;
     }
 
     //check for edit
+    if (targetClassList.contains('btn-edit-task')) {
+        console.log(`edit task ${task.id}: ${task.firstChild.textContent}`);
+
+        const para = task.firstChild;
+        const input = task.children[1];
+        
+        if (input.classList.contains('hide')) {
+            para.classList.toggle('hide');
+            input.classList.toggle('hide');
+            input.focus();
+            input.value = para.textContent;
+
+            input.addEventListener('change', handleEdit);
+            input.addEventListener('blur', handleEdit);
+            task.removeEventListener('click', handleClick);
+        } else {
+            console.log('simple transition back... still required?')
+        }
+
+        return;
+    }
 
     //else toggle 'done' state of task
     event.currentTarget.classList.toggle('done');
 };
+
+/**
+ * Handles edits on a task
+ * 
+ */
+const handleEdit = (event) => {
+    const input = event.currentTarget;
+    const task = input.parentElement;
+    const para = task.firstChild;
+
+    if (para.textContent != input.value) {
+        para.textContent = input.value;
+    }   
+
+    input.removeEventListener('change', handleEdit);
+    input.removeEventListener('blur', handleEdit);
+    // (Janky!) The timeout, prevents clicking outside of input from triggering new immediate event.
+    setTimeout(() => {task.addEventListener('click', handleClick);}, 500)
+    
+    para.classList.toggle('hide');
+    input.classList.toggle('hide');
+}
 
 
 /**

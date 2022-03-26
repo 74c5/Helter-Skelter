@@ -76,7 +76,7 @@ main {
     text-decoration: line-through;
 }
 
-.task-edit {
+.hide {
     display: none;
 }
 
