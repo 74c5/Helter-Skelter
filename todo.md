@@ -1,9 +1,5 @@
 - [] cache the task list to local storage
 
-- [x] edit task
-- [x] fonts
-    - edit box set same size as para...
-
 
 ## required tweaks
 
@@ -22,3 +18,5 @@
 
 - hotkeys
 - keyboard navigation/selectable tasks
+
+- migrate to indexDB for storing data?
