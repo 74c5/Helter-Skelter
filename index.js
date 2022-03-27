@@ -44,17 +44,20 @@ const handleClick = (event) => {
 
     //check for edit
     if (targetClassList.contains('btn-edit-task')) {
-        console.log(`edit task ${task.id}: ${task.firstChild.textContent}`);
-
         const para = task.firstChild;
         const input = task.children[1];
-        
+
         if (input.classList.contains('hide')) {
+            const width = para.offsetWidth;
+            const text = para.textContent;
+            input.value = text;
+            input.style.width = `${width}px`;
+            
+            //switch out boxes
             para.classList.toggle('hide');
             input.classList.toggle('hide');
             input.focus();
-            input.value = para.textContent;
-
+            
             input.addEventListener('change', handleEdit);
             input.addEventListener('blur', handleEdit);
             task.removeEventListener('click', handleClick);
@@ -85,8 +88,8 @@ const handleEdit = (event) => {
     input.removeEventListener('change', handleEdit);
     input.removeEventListener('blur', handleEdit);
     // (Janky!) The timeout, prevents clicking outside of input from triggering new immediate event.
-    setTimeout(() => {task.addEventListener('click', handleClick);}, 500)
-    
+    setTimeout(() => {task.addEventListener('click', handleClick);}, 250)
+
     para.classList.toggle('hide');
     input.classList.toggle('hide');
 }

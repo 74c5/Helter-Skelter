@@ -1,5 +1,8 @@
+- [] cache the task list to local storage
+
 - [x] edit task
-- fonts?
+- [x] fonts
+    - edit box set same size as para...
 
 
 ## required tweaks
