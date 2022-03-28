@@ -1,4 +1,10 @@
-- [] cache the task list to local storage
+
+- [x] randomise the list
+    - [x] add button
+    - [x] regenerate the list in random order
+    - [x] remove and re-add individually to allow for animations
+    
+- [x] cache the task list to local storage
 
 
 ## required tweaks

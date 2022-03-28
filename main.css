@@ -49,6 +49,12 @@ main {
     padding: 1rem;
 }
 
+#task-form {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
 #task-input {
     font-family: 'Give You Glory', cursive;
     font-size: 1.3rem;
@@ -57,6 +63,19 @@ main {
     border-radius: 0.5rem;
     border: 1px solid darkgray;
     text-align: center;
+}
+
+#btn-randomize {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 1.25rem;
+    color: red;
+    background-color: steelblue;
+    border-radius: 0.5rem;
+    border: 1px solid lightgray;
+    cursor: pointer;
+    text-align: center;
+    padding-bottom: 0.3rem;
 }
 
 #task-list {
