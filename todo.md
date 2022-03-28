@@ -1,11 +1,10 @@
 
-- [x] randomise the list
-    - [x] add button
-    - [x] regenerate the list in random order
-    - [x] remove and re-add individually to allow for animations
-    
-- [x] cache the task list to local storage
-
+- animations - basic transitions on:
+    - [x] add a task
+    - [x] remove a task
+    - [x] mark complete
+    - [x] edit task
+    - [x] re-add the list
 
 ## required tweaks
 

@@ -21,11 +21,12 @@ const addDomTask = (task) => {
     const listEl = document.querySelector('#task-list');
 
     const taskEl = document.createElement('div');
-    taskEl.classList = (task.done)? ['task done'] : ['task'];
+    taskEl.classList.toggle('task', true);
+    taskEl.classList.toggle('done', task.done);
     taskEl.id = `task-${task.id}`;
     taskEl.innerHTML = 
        `<p class="task-text">This is a dummy task.</p>
-        <input class="task-edit hide" type="text">
+        <input class="task-edit invisible hidden" type="text">
         <div class="task-controls">
             <button class="btn-edit-task">&#8634;</button>
             <button class="btn-delete-task">&times;</button>
@@ -35,6 +36,9 @@ const addDomTask = (task) => {
     taskEl.addEventListener('click', handleTaskClick);
     
     listEl.insertBefore(taskEl, listEl.firstChild);
+    setTimeout(() => {
+        taskEl.classList.toggle('show')
+    }, 10);
 }
 
 const updateDomTask = (taskEl, task) => {
@@ -48,53 +52,68 @@ const updateDomTask = (taskEl, task) => {
 
 const removeDomTask = (taskEl) => {
     taskEl.removeEventListener('click', handleTaskClick);
-    taskEl.remove();
+    taskEl.classList.toggle('show')
+    setTimeout(() => taskEl.remove(), 1000);
 }
 
 const enterDomTaskEditMode = (taskEl, task) => {
+    console.log(`enter edit mode? ${task.id}: ${task.text}`);
     const pEl     = taskEl.firstChild;
     const inputEl = taskEl.children[1];
 
-    if (inputEl.classList.contains('hide')) {
+    if (inputEl.classList.contains('hidden')) { //todo: shouldn't need this...
         const width = pEl.offsetWidth;
         
         inputEl.style.width = `${width}px`;
         inputEl.value = task.text;
-        
-        //switch out boxes
-        pEl.classList.toggle('hide');
-        inputEl.classList.toggle('hide');
-        inputEl.focus();
-        
+
+        // switch event handlers
         inputEl.addEventListener('change', handleTaskEdit);
         inputEl.addEventListener('blur', handleTaskEdit);
         taskEl.removeEventListener('click', handleTaskClick);
+
+        //switch out boxes
+        pEl.classList.toggle('hidden');
+        inputEl.classList.toggle('hidden');
+        setTimeout( () => {
+            pEl.classList.toggle('invisible');
+            inputEl.classList.toggle('invisible');
+            inputEl.focus();
+        }, 10); // removing display: none requires a small timeout
     }
 }
 
 const exitDomTaskEditMode = (taskEl) => {
     const inputEl = taskEl.children[1];
-    const paraEl  = taskEl.firstChild;
+    const pEl     = taskEl.firstChild;
 
     inputEl.removeEventListener('change', handleTaskEdit);
     inputEl.removeEventListener('blur', handleTaskEdit);
     // (Janky!) The timeout, prevents clicking outside of input from triggering new immediate event.
     setTimeout(() => {taskEl.addEventListener('click', handleTaskClick);}, 250)
     
-    paraEl.classList.toggle('hide');
-    inputEl.classList.toggle('hide');
+    pEl.classList.toggle('hidden');
+    inputEl.classList.toggle('hidden');
+    setTimeout( () => {
+        pEl.classList.toggle('invisible');
+        inputEl.classList.toggle('invisible');
+    }, 10); // removing display: none requires a small timeout
 };
 
 // written this way to allow for animations...
 const reloadDomTasks = () => {
     if (tasks.length == 0) return;
 
+    const queue = [];
+
     tasks.forEach(task => {
         const taskEl = document.querySelector(`#task-${task.id}`);
-        if (taskEl) removeDomTask(taskEl)
-        addDomTask(task);
+        if (taskEl) queue.push(() => {removeDomTask(taskEl);} );
+        queue.push(() => {addDomTask(task);} );
     })
 
+    const offset = 600; //animation offset
+    queue.forEach( (cb, i) => setTimeout(cb, offset*i));
 };
 
 // handlers (half-breeds)
@@ -139,7 +158,6 @@ const handleRandomizeClick = (event) => {
     let copy = [...tasks];
     const result = [];
 
-    console.log(copy)
     while (copy.length > 0) {
         const index = Math.floor(Math.random()*copy.length);
         result.push(copy[index])
@@ -179,7 +197,7 @@ const restoreFromStorage = () => {
     if (storedTasks) {
         storedTasks.forEach( t => {
             tasks.push(t) 
-            nextID = Math.max(nextID, t.id);
+            nextID = Math.max(nextID, t.id) + 1;
         });
         reloadDomTasks();
     }
@@ -193,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = document.querySelector('#task-input');
     
     form.addEventListener('submit', (event) => {
+        event.stopPropagation();
         event.preventDefault();
         
         if (input.value == '') return;
