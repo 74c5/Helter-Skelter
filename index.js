@@ -28,9 +28,10 @@ const addDomTask = (task) => {
        `<p class="task-text">This is a dummy task.</p>
         <input class="task-edit invisible hidden" type="text">
         <div class="task-controls">
-            <button class="btn-edit-task">&#8634;</button>
-            <button class="btn-delete-task">&times;</button>
-        <div class="task-controls">`
+            <button class="btn-edit-task"><span>&#10226;</span></button>
+            <!-- &#10226; or &#8634; -->
+            <button class="btn-delete-task"><span>&times;</span></button>
+        </div>`
 
     taskEl.firstChild.textContent = task.text;
     taskEl.addEventListener('click', handleTaskClick);
@@ -127,8 +128,9 @@ const handleTaskClick = (event) => {
     const index = tasks.findIndex((t) => t.id == taskEl.id.slice(5));
     const task  = tasks[index];
 
-    const targetClassList = event.target.classList;
-
+    console.log(event.target)
+    const targetClassList = (event.target.tagName == 'SPAN')? event.target.parentNode.classList : event.target.classList;
+    
     //short-circuit click in edit box - as we don't want to trigger a mark done
     if (targetClassList.contains('task-edit')) {
         return;
@@ -186,6 +188,10 @@ const handleTaskEdit = (event) => {
     exitDomTaskEditMode(taskEl);
 }
 
+const handleHelpClick = (event) => {
+    console.log('There\'s just no helping some people');
+}
+
 // pushed program state to local storage, this allows lists - etc, to be stored between sessions
 const updateLocalStorage = () => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -207,10 +213,9 @@ const restoreFromStorage = () => {
  * Register handler and connect up the application
  */
 document.addEventListener('DOMContentLoaded', () => {
-    const form  = document.querySelector('#task-form');
     const input = document.querySelector('#task-input');
     
-    form.addEventListener('submit', (event) => {
+    input.addEventListener('change', (event) => {
         event.stopPropagation();
         event.preventDefault();
         
@@ -222,6 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const randomBtn = document.querySelector('#btn-randomize');
     randomBtn.addEventListener('click', handleRandomizeClick);
+
+    const helpBtn = document.querySelector('#btn-help');
+    helpBtn.addEventListener('click', handleHelpClick);
 
     // poll local storage
     restoreFromStorage();

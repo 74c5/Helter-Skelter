@@ -1,16 +1,16 @@
 
-- animations - basic transitions on:
-    - [x] add a task
-    - [x] remove a task
-    - [x] mark complete
-    - [x] edit task
-    - [x] re-add the list
+- [x] colors
+    - tweaked styling
+    
+- task ordering
+    - new task to bottom of list
+
+- randomise leaves completed tasks in place...
+
+- help dialog
+
 
 ## required tweaks
-
-- colors
-
-
 
 ## ideas
 
