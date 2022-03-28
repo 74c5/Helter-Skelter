@@ -36,7 +36,7 @@ const addDomTask = (task) => {
     taskEl.firstChild.textContent = task.text;
     taskEl.addEventListener('click', handleTaskClick);
     
-    listEl.insertBefore(taskEl, listEl.firstChild);
+    listEl.append(taskEl);
     setTimeout(() => {
         taskEl.classList.toggle('show')
     }, 10);
@@ -58,7 +58,6 @@ const removeDomTask = (taskEl) => {
 }
 
 const enterDomTaskEditMode = (taskEl, task) => {
-    console.log(`enter edit mode? ${task.id}: ${task.text}`);
     const pEl     = taskEl.firstChild;
     const inputEl = taskEl.children[1];
 
@@ -113,7 +112,7 @@ const reloadDomTasks = () => {
         queue.push(() => {addDomTask(task);} );
     })
 
-    const offset = 600; //animation offset
+    const offset = 450; //animation offset
     queue.forEach( (cb, i) => setTimeout(cb, offset*i));
 };
 
@@ -128,7 +127,6 @@ const handleTaskClick = (event) => {
     const index = tasks.findIndex((t) => t.id == taskEl.id.slice(5));
     const task  = tasks[index];
 
-    console.log(event.target)
     const targetClassList = (event.target.tagName == 'SPAN')? event.target.parentNode.classList : event.target.classList;
     
     //short-circuit click in edit box - as we don't want to trigger a mark done
@@ -157,16 +155,24 @@ const handleTaskClick = (event) => {
 };
 
 const handleRandomizeClick = (event) => {
-    let copy = [...tasks];
+    let [done, todo] = tasks.reduce(([d,td], t) => {
+        (t.done)? d.push(t) : td.push(t);
+        return [d,td];
+    }, [[],[]]);
+
+    console.table(done);
+    console.table(todo);
+    
     const result = [];
 
-    while (copy.length > 0) {
-        const index = Math.floor(Math.random()*copy.length);
-        result.push(copy[index])
-        copy = [...copy.slice(0,index), ...copy.slice(index+1)];
+    //this isn't very efficient... but we're only working with small arrays...
+    while (todo.length > 0) {
+        const index = Math.floor(Math.random()*todo.length);
+        result.push(todo[index])
+        todo = [...todo.slice(0,index), ...todo.slice(index+1)];
     }
 
-    tasks = result
+    tasks = [...result, ...done];
     reloadDomTasks();
 };
 
@@ -234,13 +240,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // poll local storage
     restoreFromStorage();
 
-    // input for testing if none-exists
-    if (tasks.length == 0) {
-        addDomTask(newTask('hello'));
-        addDomTask(newTask('a longer task'));
-        addDomTask(newTask('bye'));
-    }
-    
     // set focus to input by default
     input.focus();
 });
+
+//debug...
+const addTestTasks = () => {
+    addDomTask(newTask('one: hello'));
+    addDomTask(newTask('two: a longer task'));
+    addDomTask(newTask('three: bye'));
+}

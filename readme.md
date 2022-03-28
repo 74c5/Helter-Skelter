@@ -18,3 +18,10 @@ Pure HTML/CSS/JS
 - PWA support
 - deploy using webpack
 - drag and drop to re-order
+
+# Attributions
+
+- favicon courtesy of [shityicons](https://shittyicons.com/#/)
+- colour pallet from [Paletton.com](https://paletton.com/#uid=53s0u0kcIGR3-XQ85QFh9vVlfri)
+- fonts from [Google Fonts](https://fonts.google.com)
+    - pairings using [fontjoy](https://fontjoy.com/)

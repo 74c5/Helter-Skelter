@@ -1,13 +1,12 @@
-
 - [x] colors
     - tweaked styling
-    
-- task ordering
+
+- [x] task ordering
     - new task to bottom of list
 
-- randomise leaves completed tasks in place...
+- [x] randomise shifts completed tasks to bottom (in order)
 
-- help dialog
+- help modal?
 
 
 ## required tweaks

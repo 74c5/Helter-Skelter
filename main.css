@@ -87,7 +87,7 @@ main {
     text-align: center;
     font-weight: 600;
     height: 2.5rem;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     border: none;
     outline: none;
     box-shadow: 0 0 4px var(--primary-2);
@@ -105,7 +105,8 @@ main {
     width: 2.25rem;
     height: 2.25rem;
     font-size: 1.25rem;
-    color: var(--highlight-2);
+    font-weight: 700;
+    color: var(--tertiary-1);
     background-color: var(--primary-3);
     border-radius: 0.75rem;
     border: none;
@@ -147,7 +148,7 @@ main {
     opacity: 0;
     overflow: hidden;
     transform: rotateY(-180deg);
-    transition: all 0.5s linear;
+    transition: all 0.4s linear;
 }
 
 .task:hover {
@@ -161,7 +162,7 @@ main {
     transform: none;
     padding: 1rem;
     margin-bottom: 0.5rem;
-    transition: all 0.5s ease-in-out;
+    transition: all 0.4s ease-in-out;
 }
 
 .task-text, .task-edit {
@@ -176,13 +177,13 @@ main {
     padding-left: 0.5rem;
     text-decoration: none;
     cursor: pointer;
-    transition: text-decoration 0.5s ease-in-out, color 0.5s ease-in-out, opacity 0.5s ease-in-out;
+    transition: text-decoration 0.4s ease-in-out, color 0.4s ease-in-out, opacity 0.4s ease-in-out;
 }
 
 .task.done > .task-text {
     color: var(--primary-2);
     text-decoration: line-through;
-    transition: text-decoration 0.5s ease-in-out, color 0.5s ease-in-out;
+    transition: text-decoration 0.4s ease-in-out, color 0.4s ease-in-out;
 }
 
 .task-edit {
@@ -194,12 +195,12 @@ main {
     padding-left: 0.5rem;
     /* transition effects */
     opacity: 1;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.4s ease-in-out;
 }
 
 .invisible {
     opacity: 0;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.4s ease-in-out;
 }
 
 .hidden {
@@ -216,7 +217,7 @@ main {
     width: 2rem;
     height: 2rem;
     font-size: 1.5rem;
-    color: var(--highlight-2);
+    color: var(--primary-1);
     background-color: var(--primary-3);
     border: none;
     cursor: pointer;
@@ -233,12 +234,12 @@ main {
 
 .btn-edit-task > span {
     position: relative;
-    top: -0.3rem;
+    top: -0.2rem;
 }
 
 .btn-delete-task > span {
     position: relative;
-    top: -0.6rem;
+    top: -0.525rem;
 }
 
 
