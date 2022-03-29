@@ -18,16 +18,16 @@ const newTask = (text) => {
 
 // dom manipulations
 const addDomTask = (task) => {
-    const listEl = document.querySelector('#task-list');
+    const listEl = document.querySelector('#list-tasks');
 
     const taskEl = document.createElement('div');
     taskEl.classList.toggle('task', true);
     taskEl.classList.toggle('done', task.done);
     taskEl.id = `task-${task.id}`;
     taskEl.innerHTML = 
-       `<p class="task-text">This is a dummy task.</p>
-        <input class="task-edit invisible hidden" type="text">
-        <div class="task-controls">
+       `<p class="text-task">This is a dummy task.</p>
+        <input class="input-edit-task invisible hidden" type="text">
+        <div class="controls-task">
             <button class="btn-edit-task"><span>&#10226;</span></button>
             <!-- &#10226; or &#8634; -->
             <button class="btn-delete-task"><span>&times;</span></button>
@@ -54,7 +54,7 @@ const updateDomTask = (taskEl, task) => {
 const removeDomTask = (taskEl) => {
     taskEl.removeEventListener('click', handleTaskClick);
     taskEl.classList.toggle('show')
-    setTimeout(() => taskEl.remove(), 1000);
+    setTimeout(() => taskEl.remove(), 500);
 }
 
 const enterDomTaskEditMode = (taskEl, task) => {
@@ -106,11 +106,16 @@ const reloadDomTasks = () => {
 
     const queue = [];
 
-    tasks.forEach(task => {
-        const taskEl = document.querySelector(`#task-${task.id}`);
-        if (taskEl) queue.push(() => {removeDomTask(taskEl);} );
-        queue.push(() => {addDomTask(task);} );
-    })
+    // remove list in reverse current order
+    const domList = document.querySelector('#list-tasks').children;
+    if (domList.length > 0) {
+        for (let i = domList.length-1; i >= 0; i--) {
+            queue.push( () => {removeDomTask(domList[i]); } );
+        }
+    }
+
+    // re-add in new order
+    tasks.forEach(task => { queue.push(() => {addDomTask(task);} ) });
 
     const offset = 450; //animation offset
     queue.forEach( (cb, i) => setTimeout(cb, offset*i));
@@ -160,9 +165,6 @@ const handleRandomizeClick = (event) => {
         return [d,td];
     }, [[],[]]);
 
-    console.table(done);
-    console.table(todo);
-    
     const result = [];
 
     //this isn't very efficient... but we're only working with small arrays...
@@ -195,6 +197,18 @@ const handleTaskEdit = (event) => {
 }
 
 const handleHelpClick = (event) => {
+    const modal = document.querySelector('#modal-help');
+
+    if (modal.classList.contains('off-screen-left')) {
+        // show the modal
+        modal.classList.toggle('off-screen-left');  // remove the class
+        modal.addEventListener('click', handleHelpClick); // re-trigger for click anywhere on screen
+    } else {
+        // hide the modal
+        modal.classList.toggle('off-screen-left');  // re-add the class
+        modal.removeEventListener('click', handleHelpClick); // remove modal level trigger
+    }
+
     console.log('There\'s just no helping some people');
 }
 
@@ -219,7 +233,7 @@ const restoreFromStorage = () => {
  * Register handler and connect up the application
  */
 document.addEventListener('DOMContentLoaded', () => {
-    const input = document.querySelector('#task-input');
+    const input = document.querySelector('#input-new-task');
     
     input.addEventListener('change', (event) => {
         event.stopPropagation();

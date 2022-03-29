@@ -13,7 +13,7 @@
 
 ## ideas
 
-- animate task addition/removal
+- batch input
 - wrap lines for very long tasks
 - enter multi-line tasks?
 

@@ -1,7 +1,7 @@
 /* Font imports */
 @import url('https://fonts.googleapis.com/css2?family=Biryani&family=Cormorant+Infant:wght@400;700&family=Give+You+Glory&display=swap');
 
-/* colors */
+/* colours */
 :root {
     --primary-1: #DCEDF6;
     --primary-2: #ABCFE1;
@@ -65,23 +65,23 @@ body {
 main {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
     flex-grow: 1;
     margin: 0.5rem 1rem;
     border-radius: 0.25rem;
-    /* background-color: var(--secondary-1); */
-    align-items: center;
     gap: 1.5rem;
     padding: 1rem;
 }
 
-#list-controls {
+.controls-task-list {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     min-width: 300px;
 }
 
-#task-input {
+.input-new-task {
     font-family: 'Give You Glory', cursive;
     font-size: 1.3rem;
     text-align: center;
@@ -94,13 +94,13 @@ main {
     color: var(--secondary-2);
 }
 
-#task-input:focus-visible {
+.input-new-task:focus-visible {
     outline: none;
     box-shadow: 0 0 6px var(--secondary-3);
     color: var(--primary-5);
 }
 
-#btn-randomize, #btn-help {
+.btn-randomize, .btn-help {
     position: relative;
     width: 2.25rem;
     height: 2.25rem;
@@ -116,12 +116,12 @@ main {
     text-align: center;
 }
 
-#btn-randomize > span {
+.btn-randomize > span {
     position: relative;
     top: -0.05rem;
 }
 
-#btn-randomize:hover, #btn-help:hover {
+.btn-randomize:hover, .btn-help:hover {
     color: var(--highlight-3);
     box-shadow: 0 0 4px var(--secondary-3);
     text-shadow: 0px 0px 3px var(--tertiary-1);
@@ -165,14 +165,14 @@ main {
     transition: all 0.4s ease-in-out;
 }
 
-.task-text, .task-edit {
+.text-task, .input-edit-task {
     font-family: 'Give You Glory', cursive;
     font-size: 1.25rem;
     font-weight: 600;
     flex-grow: 1;
 }
 
-.task-text {
+.text-task {
     opacity: 1;
     padding-left: 0.5rem;
     text-decoration: none;
@@ -180,13 +180,13 @@ main {
     transition: text-decoration 0.4s ease-in-out, color 0.4s ease-in-out, opacity 0.4s ease-in-out;
 }
 
-.task.done > .task-text {
+.task.done > .text-task {
     color: var(--primary-2);
     text-decoration: line-through;
     transition: text-decoration 0.4s ease-in-out, color 0.4s ease-in-out;
 }
 
-.task-edit {
+.input-edit-task {
     border-radius: 0.75rem;
     border: 1px solid var(--primary-2);
     outline: none;
@@ -207,7 +207,7 @@ main {
     display: none;
 }
 
-.task-controls {
+.controls-task {
     display: flex;
     align-items: center;
 }
@@ -242,6 +242,76 @@ main {
     top: -0.525rem;
 }
 
+.modal-help {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.5);
+    color: var(--tertiary-1);
+    z-index: 1;
+    transition: left 0.4s ease-in-out, background-color 0.3s ease-in-out 0.3s;
+}
+
+.off-screen-left {
+    left: -100vw;
+    background-color: rgba(0,0,0,0);
+    transition: background-color 0.3s ease-in-out, left 0.4s ease-in-out 0.3s;
+}
+
+.container-help {
+    position: relative;
+    top: 1.5rem;
+    left: 5vw;
+    width: 90vw;
+    height: 90vh;
+    border-radius: 2rem;
+    background-color: var(--secondary-3);
+    padding: 1rem 2rem 1rem 4rem;
+    
+}
+
+.container-help > h3 {
+    font-family: 'Cormorant Infant', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--primary-2);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.btn-close-help {
+    position: absolute;
+    right: 1.75rem;
+    top: 0.75rem;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--tertiary-1);
+    background-color: var(--secondary-3);
+    border-radius: 0.75rem;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn-close-help:hover {
+    color: var(--highlight-3);
+    box-shadow: 0 0 4px var(--secondary-3);
+    text-shadow: 0px 0px 3px var(--tertiary-1);
+}
+
+.container-help > ul > li {
+    line-height: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.icon-help {
+    color: var(--highlight-3);
+}
 
 footer {
     font-family: 'Cormorant Infant', serif;
@@ -252,7 +322,7 @@ footer {
     margin-bottom: 0.5rem;
 }
 
-.copyleft {
+.reverse {
     transform: rotateY(180deg);
     display: inline-block;
 }
