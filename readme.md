@@ -25,3 +25,4 @@ Pure HTML/CSS/JS
 - colour pallet from [Paletton.com](https://paletton.com/#uid=53s0u0kcIGR3-XQ85QFh9vVlfri)
 - fonts from [Google Fonts](https://fonts.google.com)
     - pairings using [fontjoy](https://fontjoy.com/)
+- [Webdev Simplified Drag and Drop Tutorial (Youtube)](https://youtu.be/jfYWwQrtzzY)

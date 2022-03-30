@@ -1,19 +1,15 @@
-- [x] colors
-    - tweaked styling
+- [x] help modal?
 
-- [x] task ordering
-    - new task to bottom of list
-
-- [x] randomise shifts completed tasks to bottom (in order)
-
-- help modal?
-
+- [x] re-ordering
+    - [x] drag and drop
+    - help dialog
 
 ## required tweaks
 
 ## ideas
 
 - batch input
+- refactor - separate dom & logic
 - wrap lines for very long tasks
 - enter multi-line tasks?
 

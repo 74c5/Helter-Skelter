@@ -142,13 +142,13 @@ main {
     border: none;
     box-shadow: 0 0 4px var(--primary-2);
     /* transition over these effects */
+    width: 0;
     height: 0;
     margin: 0;
     padding: 0;
     opacity: 0;
     overflow: hidden;
-    transform: rotateY(-180deg);
-    transition: all 0.4s linear;
+    transition: all 0.4s ease-in-out;
 }
 
 .task:hover {
@@ -158,11 +158,41 @@ main {
 
 .show {
     height: auto;
+    width: auto;
     opacity: 1;
     transform: none;
-    padding: 1rem;
+    padding: 1rem 0.5rem;
     margin-bottom: 0.5rem;
     transition: all 0.4s ease-in-out;
+}
+
+.dragging {
+    opacity: 0.5;
+    transition: opacity 0.4s ease-in-out;
+}
+
+.insert-before {
+    margin-top: 1.5rem;
+    transition: margin-top 0.4s ease-in-out;
+}
+
+.grabber-task {
+    cursor: move;
+    text-align: center;
+    width: 2rem;
+    /* border-right: 1px dashed var(--primary-2); */
+    color: var(--primary-1);
+    background-color: var(--primary-3);
+}
+
+.grabber-task > span {
+    position: relative;
+    top: -0.1rem;
+}
+
+.grabber-task:hover {
+    color: var(--highlight-3);
+    text-shadow: 0px 0px 3px var(--tertiary-1);
 }
 
 .text-task, .input-edit-task {
@@ -174,7 +204,7 @@ main {
 
 .text-task {
     opacity: 1;
-    padding-left: 0.5rem;
+    /* padding-left: 0.5rem; */
     text-decoration: none;
     cursor: pointer;
     transition: text-decoration 0.4s ease-in-out, color 0.4s ease-in-out, opacity 0.4s ease-in-out;

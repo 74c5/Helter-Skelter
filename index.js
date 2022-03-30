@@ -17,15 +17,16 @@ const newTask = (text) => {
 };
 
 // dom manipulations
-const addDomTask = (task) => {
-    const listEl = document.querySelector('#list-tasks');
-
+const createDomTask = (task) => {
     const taskEl = document.createElement('div');
-    taskEl.classList.toggle('task', true);
-    taskEl.classList.toggle('done', task.done);
     taskEl.id = `task-${task.id}`;
+    taskEl.classList.add('task');
+    taskEl.classList.toggle('done', task.done);
+    taskEl.draggable = true;
     taskEl.innerHTML = 
-       `<p class="text-task">This is a dummy task.</p>
+       `<div class="grabber-task"><span>&#10495;</span></div>
+        <!-- &#10495; or &#10303; or &#10240; -->
+        <div class="text-task">This is a dummy task.</div>
         <input class="input-edit-task invisible hidden" type="text">
         <div class="controls-task">
             <button class="btn-edit-task"><span>&#10226;</span></button>
@@ -33,33 +34,45 @@ const addDomTask = (task) => {
             <button class="btn-delete-task"><span>&times;</span></button>
         </div>`
 
-    taskEl.firstChild.textContent = task.text;
+    taskEl.querySelector('.text-task').textContent = task.text;
     taskEl.addEventListener('click', handleTaskClick);
-    
-    listEl.append(taskEl);
+    taskEl.addEventListener('dragstart', handleTaskDragStart);
+    taskEl.addEventListener('dragend', handleTaskDragEnd);
+
+    return taskEl;
+};
+
+const insertDomTask = (taskEl, beforeEl = null) => {
+    const listEl = document.querySelector('#list-tasks');
+
+    listEl.insertBefore(taskEl, beforeEl);
     setTimeout(() => {
-        taskEl.classList.toggle('show')
+        taskEl.classList.add('show')
     }, 10);
 }
 
 const updateDomTask = (taskEl, task) => {
-    const pEl = taskEl.firstChild;
+    const pEl = taskEl.querySelector('.text-task');
     if (pEl.textContent !== task.text) pEl.textContent = task.text;
     
-    // only update, if they don't share the same value
-    const elDone = taskEl.classList.contains('done');
-    if (task.done ? !elDone : elDone) taskEl.classList.toggle('done', task.done);
+    // mirror task done state
+    taskEl.classList.toggle('done', task.done);
 };
 
 const removeDomTask = (taskEl) => {
-    taskEl.removeEventListener('click', handleTaskClick);
     taskEl.classList.toggle('show')
-    setTimeout(() => taskEl.remove(), 500);
+}
+
+const destroyDomTask = (taskEl) => {
+    taskEl.removeEventListener('click', handleTaskClick);
+    taskEl.removeEventListener('dragstart', handleTaskDragStart);
+    taskEl.removeEventListener('dragend', handleTaskDragEnd);
+    taskEl.remove();
 }
 
 const enterDomTaskEditMode = (taskEl, task) => {
-    const pEl     = taskEl.firstChild;
-    const inputEl = taskEl.children[1];
+    const pEl     = taskEl.querySelector('.text-task');
+    const inputEl = taskEl.querySelector('.input-edit-task');
 
     if (inputEl.classList.contains('hidden')) { //todo: shouldn't need this...
         const width = pEl.offsetWidth;
@@ -73,53 +86,75 @@ const enterDomTaskEditMode = (taskEl, task) => {
         taskEl.removeEventListener('click', handleTaskClick);
 
         //switch out boxes
-        pEl.classList.toggle('hidden');
-        inputEl.classList.toggle('hidden');
+        pEl.classList.add('hidden');
+        inputEl.classList.remove('hidden');
         setTimeout( () => {
-            pEl.classList.toggle('invisible');
-            inputEl.classList.toggle('invisible');
+            pEl.classList.add('invisible');
+            inputEl.classList.remove('invisible');
             inputEl.focus();
         }, 10); // removing display: none requires a small timeout
     }
 }
 
 const exitDomTaskEditMode = (taskEl) => {
-    const inputEl = taskEl.children[1];
-    const pEl     = taskEl.firstChild;
+    const pEl     = taskEl.querySelector('.text-task');
+    const inputEl = taskEl.querySelector('.input-edit-task');
 
     inputEl.removeEventListener('change', handleTaskEdit);
     inputEl.removeEventListener('blur', handleTaskEdit);
     // (Janky!) The timeout, prevents clicking outside of input from triggering new immediate event.
     setTimeout(() => {taskEl.addEventListener('click', handleTaskClick);}, 250)
     
-    pEl.classList.toggle('hidden');
-    inputEl.classList.toggle('hidden');
+    pEl.classList.remove('hidden');
+    inputEl.classList.add('hidden');
     setTimeout( () => {
-        pEl.classList.toggle('invisible');
-        inputEl.classList.toggle('invisible');
+        pEl.classList.remove('invisible');
+        inputEl.classList.add('invisible');
     }, 10); // removing display: none requires a small timeout
 };
 
 // written this way to allow for animations...
-const reloadDomTasks = () => {
-    if (tasks.length == 0) return;
+const reloadDomTasks = (list) => {
+    if (list.length == 0) return;
 
     const queue = [];
 
-    // remove list in reverse current order
-    const domList = document.querySelector('#list-tasks').children;
-    if (domList.length > 0) {
-        for (let i = domList.length-1; i >= 0; i--) {
-            queue.push( () => {removeDomTask(domList[i]); } );
+    // remove items from list in reverse current order
+    const domList = [...document.querySelector('#list-tasks').children].reverse();
+    let beforeEl = null;
+    domList.forEach( tEl => {
+        if (list.findIndex(t => t.id == tEl.id.slice(5)) >= 0) {
+            queue.push( () => {removeDomTask( tEl ); } );
+        } else {
+            beforeEl = tEl;
         }
-    }
-
+    });
+        
     // re-add in new order
-    tasks.forEach(task => { queue.push(() => {addDomTask(task);} ) });
+    list.forEach( t => { 
+        const taskEl = domList.find( tEl => t.id == tEl.id.slice(5) );
+        if ( taskEl ) {
+            queue.push(() => { insertDomTask(taskEl, beforeEl); }); 
 
-    const offset = 450; //animation offset
+        } else { 
+            // recreate tasks, first
+            queue.push(() => { insertDomTask(createDomTask(t), beforeEl); });
+        }
+    });
+
+    const offset = 500; //animation offset
     queue.forEach( (cb, i) => setTimeout(cb, offset*i));
 };
+
+const previewTaskInsert = (beforeEl) => {
+    const prevBeforeEl = document.querySelector('.insert-before');
+    
+    if (beforeEl !== prevBeforeEl) {
+        if (beforeEl) beforeEl.classList.add('insert-before');
+        if (prevBeforeEl) prevBeforeEl.classList.remove('insert-before');
+    }
+};
+
 
 // handlers (half-breeds)
 
@@ -143,6 +178,7 @@ const handleTaskClick = (event) => {
     if (targetClassList.contains('btn-delete-task')) {
         tasks = [...tasks.slice(0,index), ...tasks.slice(index+1)];
         removeDomTask(taskEl);
+        destroyDomTask(taskEl);
         updateLocalStorage()
         return;
     }
@@ -157,6 +193,37 @@ const handleTaskClick = (event) => {
     task.done = !task.done;
     updateDomTask(taskEl, task);
     updateLocalStorage()
+};
+
+const handleTaskDragStart = (event) => {
+    const taskEl = event.currentTarget;
+    taskEl.classList.add('dragging');
+};
+
+const handleTaskDragEnd = (event) => {
+    const taskEl  = event.currentTarget;
+    const beforeEl = document.querySelector('.insert-before');
+    
+    const currentIndex = tasks.findIndex(t => t.id == taskEl.id.slice(5));
+    const beforeIndex = (beforeEl)? tasks.findIndex(t => t.id == beforeEl.id.slice(5)) : tasks.length;
+    
+    if (currentIndex != beforeIndex-1) {
+        const task = tasks[currentIndex];
+        const newIndex = (currentIndex < beforeIndex)? beforeIndex-1 : beforeIndex;
+
+        //update task lits
+        tasks = [...tasks.slice(0,currentIndex), ...tasks.slice(currentIndex+1)]
+        tasks.splice(newIndex, 0, task);
+        
+        removeDomTask(taskEl);
+        setTimeout(() => {
+            insertDomTask(taskEl, beforeEl)
+        }, 500);
+        updateLocalStorage();
+    }
+
+    if (beforeEl) beforeEl.classList.remove('insert-before');
+    taskEl.classList.remove('dragging');
 };
 
 const handleRandomizeClick = (event) => {
@@ -175,13 +242,10 @@ const handleRandomizeClick = (event) => {
     }
 
     tasks = [...result, ...done];
-    reloadDomTasks();
+    updateLocalStorage();
+    reloadDomTasks(result);
 };
 
-/**
- * Handles edits on a task
- * 
- */
 const handleTaskEdit = (event) => {
     const inputEl = event.currentTarget;
     const taskEl  = inputEl.parentElement;
@@ -196,20 +260,43 @@ const handleTaskEdit = (event) => {
     exitDomTaskEditMode(taskEl);
 }
 
+const handleListDragOver = (event) => {
+    event.preventDefault();
+
+    const listEl = event.currentTarget;
+    const taskElList = [...listEl.querySelectorAll('.task:not(.dragging)')];
+    
+    const y = event.clientY;
+
+    //finds two elements that the task is dragged between
+    const before = taskElList.reduce( (acc, el) => {
+        const box = el.getBoundingClientRect();
+        const dist = y - box.y - box.height / 2;
+
+        // cursor is above the element
+        if (dist <= 0 && dist > acc.dist) acc = {el, dist};
+        
+        return acc;
+
+    }, { el: null, dist: Number.NEGATIVE_INFINITY} );
+
+    const beforeEl = before.el;
+    
+    previewTaskInsert(beforeEl);
+};
+
 const handleHelpClick = (event) => {
     const modal = document.querySelector('#modal-help');
 
     if (modal.classList.contains('off-screen-left')) {
         // show the modal
-        modal.classList.toggle('off-screen-left');  // remove the class
+        modal.classList.remove('off-screen-left');  // remove the class
         modal.addEventListener('click', handleHelpClick); // re-trigger for click anywhere on screen
     } else {
         // hide the modal
-        modal.classList.toggle('off-screen-left');  // re-add the class
+        modal.classList.add('off-screen-left');  // re-add the class
         modal.removeEventListener('click', handleHelpClick); // remove modal level trigger
     }
-
-    console.log('There\'s just no helping some people');
 }
 
 // pushed program state to local storage, this allows lists - etc, to be stored between sessions
@@ -225,7 +312,7 @@ const restoreFromStorage = () => {
             tasks.push(t) 
             nextID = Math.max(nextID, t.id) + 1;
         });
-        reloadDomTasks();
+        reloadDomTasks(tasks);
     }
 }
 
@@ -241,10 +328,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (input.value == '') return;
         
-        addDomTask(newTask(input.value));
+        const taskEl = createDomTask(newTask(input.value));
+        insertDomTask(taskEl);
         input.value = '';
     })
     
+    const list = document.querySelector('#list-tasks');
+    list.addEventListener('dragover', handleListDragOver);
+
     const randomBtn = document.querySelector('#btn-randomize');
     randomBtn.addEventListener('click', handleRandomizeClick);
 
@@ -260,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 //debug...
 const addTestTasks = () => {
-    addDomTask(newTask('one: hello'));
-    addDomTask(newTask('two: a longer task'));
-    addDomTask(newTask('three: bye'));
+    insertDomTask(createDomTask(newTask('one: hello')));
+    insertDomTask(createDomTask(newTask('two: a longer task')));
+    insertDomTask(createDomTask(newTask('three: bye')));
 }
