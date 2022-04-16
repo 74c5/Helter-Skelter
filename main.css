@@ -56,29 +56,29 @@ body {
     /* font-family: 'Give You Glory', cursive; */
     /* font-family: 'Cormorant Infant', serif; */
     font-family: 'Biryani', sans-serif;
-    display: flex;
-    flex-direction: column;
     background-color: var(--primary-1);
     height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
 }
 
 main {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
     flex-grow: 1;
-    margin: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    gap: 1.5rem;
-    padding: 1rem;
+    gap: 1rem;
+    margin-top: 3rem;
+    width: max-content;
 }
 
 .controls-task-list {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     min-width: 300px;
+    transition: width 4s ease-in-out;
 }
 
 .input-new-task {
@@ -86,12 +86,14 @@ main {
     font-size: 1.3rem;
     text-align: center;
     font-weight: 600;
-    height: 2.5rem;
+    flex-grow: 1;
+    height: 3rem;
     border-radius: 0.75rem;
     border: none;
     outline: none;
-    box-shadow: 0 0 4px var(--primary-2);
+    box-shadow: 0 0 3px var(--primary-2);
     color: var(--secondary-2);
+    transition: width 4s ease-in-out;
 }
 
 .input-new-task:focus-visible {
@@ -102,8 +104,8 @@ main {
 
 .btn-randomize, .btn-help {
     position: relative;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2.75rem;
+    height: 2.75rem;
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--tertiary-1);
@@ -111,7 +113,7 @@ main {
     border-radius: 0.75rem;
     border: none;
     /* border: 1px solid var(--secondary-2); */
-    box-shadow: 0 0 2px var(--primary-2);
+    box-shadow: 0 0 3px var(--primary-2);
     cursor: pointer;
     text-align: center;
 }
@@ -123,8 +125,12 @@ main {
 
 .btn-randomize:hover, .btn-help:hover {
     color: var(--highlight-3);
-    box-shadow: 0 0 4px var(--secondary-3);
+    box-shadow: 0 0 5px var(--secondary-3);
     text-shadow: 0px 0px 3px var(--tertiary-1);
+}
+
+.list-tasks {
+    align-self: stretch;
 }
 
 .task {
@@ -137,32 +143,34 @@ main {
     max-width: 85vw;
     background-color: var(--primary-3);
     color: var(--tertiary-1);
-    /* border: 1px solid var(--secondary-2); */
-    border-radius: 1.5rem;
+    border-radius: 0.75rem;
     border: none;
-    box-shadow: 0 0 4px var(--primary-2);
-    /* transition over these effects */
-    width: 0;
-    height: 0;
-    margin: 0;
-    padding: 0;
-    opacity: 0;
     overflow: hidden;
+    height: auto;
+    /* transition properties */
+    padding: 0.75rem 0.5rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 0 3px var(--primary-2);
+    height: auto;
+    opacity: 1;
+    transform: none;
     transition: all 0.4s ease-in-out;
 }
 
-.task:hover {
+.task:hover, .task.highlight {
     /* border: 1px solid var(--primary-3); */
     box-shadow: 0 0 5px var(--secondary-4);
 }
 
-.show {
-    height: auto;
-    width: auto;
-    opacity: 1;
-    transform: none;
-    padding: 1rem 0.5rem;
-    margin-bottom: 0.5rem;
+.task.shrunk {
+    margin: 0;
+    padding: 0;
+    height: 0;
+}
+
+.task.hidden {
+    opacity: 0.5;
+    transform: rotateX(90deg);
     transition: all 0.4s ease-in-out;
 }
 
@@ -173,7 +181,7 @@ main {
 
 .insert-before {
     margin-top: 1.5rem;
-    transition: margin-top 0.4s ease-in-out;
+    transition: margin-top 0.2s ease-in-out;
 }
 
 .grabber-task {
@@ -187,7 +195,7 @@ main {
 
 .grabber-task > span {
     position: relative;
-    top: -0.1rem;
+    top: -0.05rem;
 }
 
 .grabber-task:hover {
@@ -220,7 +228,7 @@ main {
     border-radius: 0.75rem;
     border: 1px solid var(--primary-2);
     outline: none;
-    box-shadow: 0 0 4px var(--tertiary-3);
+    box-shadow: 0 0 3px var(--tertiary-3);
     color: var(--primary-5);
     padding-left: 0.5rem;
     /* transition effects */
@@ -228,12 +236,12 @@ main {
     transition: opacity 0.4s ease-in-out;
 }
 
-.invisible {
+.input-edit-task.hidden, .text-task.hidden {
     opacity: 0;
     transition: opacity 0.4s ease-in-out;
 }
 
-.hidden {
+.input-edit-task.removed, .text-task.removed {
     display: none;
 }
 
@@ -330,7 +338,7 @@ main {
 
 .btn-close-help:hover {
     color: var(--highlight-3);
-    box-shadow: 0 0 4px var(--secondary-3);
+    box-shadow: 0 0 5px var(--secondary-3);
     text-shadow: 0px 0px 3px var(--tertiary-1);
 }
 
