@@ -1,35 +1,8 @@
 import * as data from "./data.js";
 import * as dom  from "./dom.js";
+import * as storage from "./Storage.js"
 
-// written this way to allow for animations... @TODO
-const reloadDomTasks = (list) => {
-    if (list.length == 0) return;
-
-    const queue = [];
-
-    // remove items from list in reverse current order
-    const domList = dom.getList().reverse();
-    let beforeEl = null;
-    domList.forEach( tEl => {
-        if (list.findIndex(t => t.id == tEl.id.slice(5)) >= 0) {
-            queue.push( () => {dom.removeTask( tEl ); } );
-        } else {
-            beforeEl = tEl;
-        }
-    });
-        
-    // re-add in new order
-    list.forEach( t => { 
-        // find existing or create new task element
-        const taskEl = domList.find( tEl => t.id == tEl.id.slice(5) ) || dom.createTask(t.id, t.value, t.isDone);
-        queue.push(() => { dom.insertTask(taskEl, beforeEl); }); 
-    });
-
-    dom.animateQueue(queue);
-};
-
-
-// handlers (half-breeds)
+// todo: move to ui?
 
 /**
  * Task click event handler.
@@ -90,6 +63,11 @@ const handleNewTask = (event) => {
  * Register handler and connect up the application
  */
 document.addEventListener('DOMContentLoaded', () => {
+    const store = storage.initialise();
+
+    // hacky for now...
+    data.setHandlers({ store });
+
     dom.setHandlers({
         onNewTask        : handleNewTask,
         onClickTask      : handleClickTask,
@@ -102,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // restore tasks
-    data.loadTasks();
+    data.load();
     data.sortTasks();
     dom.updateTasks(data.getTaskList())
 

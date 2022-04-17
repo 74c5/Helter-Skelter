@@ -2,6 +2,8 @@
 let list = [];
 let nextID = 1;       // maintain a running count as ID
 
+const handlers = {store: null};
+
 // task and task list manipulation
 
 export const addTask = (value) => {
@@ -13,7 +15,7 @@ export const addTask = (value) => {
 
     nextID++;
     list.push(task);
-    saveTasks();
+    handlers.store.save(list, 'tasks');
     return task;
 };
 
@@ -30,7 +32,7 @@ export const addTasks = (values) => {
         tasks.push(task);
     }
     list = [...list, ...tasks];
-    saveTasks();
+    handlers.store.save(list, 'tasks');
 };
 
 const getTaskByID = (id) => {
@@ -47,13 +49,13 @@ export const setTaskValue = (id, value) => {
     const task = getTaskByID(id);
     task.value  = value;
     task.isDone = false; // modified tasks are incomplete
-    saveTasks();
+    handlers.store.save(list, 'tasks');
 }
 
 export const toggleTaskDone = (id) => {
     const task = getTaskByID(id);
     task.isDone = !task.isDone;
-    saveTasks();
+    handlers.store.save(list, 'tasks');
 }
 
 export const moveTask = (id, beforeId) => {
@@ -65,14 +67,14 @@ export const moveTask = (id, beforeId) => {
         const task = list[tI];
         list = [...list.slice(0,tI), ...list.slice(tI+1)];  // remove task from list
         list.splice(nI, 0, task);
-        saveTasks();
+        handlers.store.save(list, 'tasks');
     }
 };
 
 export const removeTask = (id) => {
     const index = list.findIndex( t => t.id == id );
     list = [...list.slice(0,index), ...list.slice(index+1)];
-    saveTasks();
+    handlers.store.save(list, 'tasks');
 }
 
 // returns ordered list of tasks
@@ -81,14 +83,13 @@ export const getTaskList = () => {
 }
 
 // utility functions
-const saveTasks = () => {
-    // pushed program state to local storage, this allows lists - etc, to be stored between sessions
-    localStorage.setItem('tasks', JSON.stringify(list));
+export const load = () => {
+    list = handlers.store?.load('tasks') || [];
+    nextID = (list.length > 0)? Math.max(...list.map(t => t.id.slice(5))) + 1 : 1;
 }
 
-export const loadTasks = () => {
-    list   = JSON.parse(localStorage.getItem('tasks')) || [];
-    nextID = (list.length > 0)? Math.max(...list.map(t => t.id.slice(5))) + 1 : 1;
+export const setHandlers = ({store}) => {
+    handlers.store = store;
 }
 
 // sort todo's from done
@@ -109,7 +110,7 @@ export const sortTasks = () => {
 
     if (changed) {
         list = sorted;
-        saveTasks();
+        handlers.store.save(list, 'tasks');
     }
 }
 
@@ -142,7 +143,7 @@ export const randomiseTasks = () => {
 // console.log(`changed?: ${changed}`)
     if (changed) {
         list = shuffle;
-        saveTasks();
+        handlers.store.save(list, 'tasks');
     }
 // console.table(list);
 // console.log('end random')

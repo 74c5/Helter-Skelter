@@ -2,14 +2,16 @@
     - [x] drag and drop
     - [x] help dialog
 
+- throttle or debounce on saveTasks and updateUI?
+
 - [x] refactor
     - [x] separate dom & logic
     - [x] module files (file is getting a bit long - all functions are available in root console)
-    - dom -> ui
+    - completely separate dom (rename ui), data, storage
         - all ui logic in on place
         - initialise and setCallbacks
         - sync accessors (onX from index) - semi-pubsub
-    - separate storage module
+    - [x] separate storage module
 
 - [x] batch input
     - [x] semicolon separated
@@ -19,10 +21,11 @@
 
 ## ideas
 
-- throttle or debounce on saveTasks and updateUI?
 
 - responsive design
     - test on small screen
+
+- PWA support
 
 - pending updates flag in data... this can be used to determine if updates to data?
     - or subscribe to changes via... callback pushed to data
