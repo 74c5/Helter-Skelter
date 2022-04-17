@@ -1,4 +1,5 @@
-import * as list from "./List.js";
+import * as List from "./List.js";
+import * as Utils from "./Utils.js";
 
 // interface constants
 export const TASK_ACTION = Object.freeze({
@@ -27,7 +28,10 @@ const handlers = {
 };
 
 // linked (type) list which mirrors dom elements
-let domList = list.create();
+let domList = List.create();
+// dragging variables
+let dragged, before;    
+let isDragging = false;
 
 /**
  * Takes list of objects in form [{id, value, isDone}, ...]
@@ -36,7 +40,7 @@ let domList = list.create();
 export const updateTasks = (tasks) => {
     const queue = [];
 
-    const taskList = list.create(tasks.map( t => list.node(t) ));
+    const taskList = List.create(tasks.map( t => List.node(t) ));
 // console.log('updateTasks');
 // console.log('dom: ' + domList.toString('id'));
 // console.log('input: ' + taskList.toString('id'));
@@ -66,7 +70,7 @@ export const updateTasks = (tasks) => {
                 modifications.push({el: dn.el, value: dn.value, isDone: dn.isDone})
             }
         } else { // this is a new task - push onto end of dom list
-            dn = list.node({...tn, el: createTask(tn)});
+            dn = List.node({...tn, el: createTask(tn)});
             domList.append(dn);
             additions.push(dn.el);
         }
@@ -353,56 +357,62 @@ export const getClickTaskAction = (event) => {
 
 export const startDrag = (event) => {
     const task = event.currentTarget;
-    task.classList.add('dragging');
+    isDragging = true;
+    dragged = domList.find(task.id);
+    if (dragged) {
+        dragged.el.classList.add("dragging");
+    } else {
+        console.error(`Trying to drag task, ${task.id}, which does not exist in dom list`);
+    }
 }
 
 export const endDrag = (event) => {
-    const task   = event.currentTarget;
-    const result = {
-        id : task.id,
-        beforeId : ""       // default
-    }
-    
-    task.classList.remove('dragging');
+    isDragging = false;
 
-    const before = document.querySelector('.insert-before');
+    // clear dragging classes
+    dragged.el.classList.remove('dragging');
     if (before) {
-        before.classList.remove('insert-before');
-        result.beforeId = before.id;
+        before.el.classList.remove('insert-before');
     }
 
-    return result;
+    return {
+        id       : dragged.id,
+        beforeId : before? before.id : ''
+    };
 };
 
-//todo: debounce this...
-export const previewDrag = (event) => {
-    event.preventDefault();
+// debounced task to update list based on drag location
+const updateDrag = Utils.debounce( (y) => {
+    // if dragging is complete, then this is a queued response abort
+    if (!isDragging) return;
 
-    const y = event.y;
     //find closest element below the drag point (y)
-    let before;
-    let prevBefore;
+    const prevBefore = before;
     let distance = Number.NEGATIVE_INFINITY;
     let dn = domList.first();
     while (dn) {
-        // skip the dragged item in the list
-        if (!dn.el.classList.contains("dragging")) {
+        if (dn.id != dragged.id) {  // skip the dragged item in the list
             const box  = dn.el.getBoundingClientRect();
-            const temp = y - box.y - box.height / 2;
+            const dist = y - box.y - box.height / 2;
             // cursor is above the element
-            if (temp <= 0 && temp > distance) {
-                distance = temp;
+            if (dist <= 0 && dist > distance) {
+                distance = dist;
                 before = dn;
             }
         }
-        // store previous before element
-        if (dn.el.classList.contains("insert-before") ) prevBefore = dn;
         dn = dn.next;
     }
+
     if (before?.id != prevBefore?.id) {
         if (before) before.el.classList.add('insert-before');
         if (prevBefore) prevBefore.el.classList.remove('insert-before');
     }
+}, 50);
+
+// drag handler
+export const handleDrag = (event) => {
+    event.preventDefault();
+    updateDrag(event.y);
 }
 
 export const showHelpModal = () => {

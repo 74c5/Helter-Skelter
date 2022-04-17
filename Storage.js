@@ -1,8 +1,9 @@
-/** 
- * Storage module 
+/* Storage module 
  *  At the minute this only backs up to browser LocalStorage, 
  *  later this may use other services/methods
  */
+
+import * as Utils from "./Utils.js";
 
 export const initialise = () => {
     
@@ -16,7 +17,7 @@ export const initialise = () => {
 
     // public interface
     return {
-        save,   // args: array of objects to save
-        load    // returns: array of objects
+        save : Utils.throttle(save, 1000),   // args: array of objects to save
+        load                                 // returns: array of objects
     }
 }

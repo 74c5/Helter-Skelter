@@ -1,6 +1,6 @@
-import * as data from "./data.js";
-import * as dom  from "./dom.js";
-import * as storage from "./Storage.js"
+import * as Data from "./data.js";
+import * as UI from "./dom.js";
+import * as Storage from "./Storage.js"
 
 // todo: move to ui?
 
@@ -9,53 +9,53 @@ import * as storage from "./Storage.js"
  * Handles checking (done), triggering edits and deleting.
  */
 const handleClickTask = (event) => {
-    const {action, id} = dom.getClickTaskAction(event);
+    const {action, id} = UI.getClickTaskAction(event);
 // console.log(`click action: ${action}, ${id}`);
     switch (action) {
-        case dom.TASK_ACTION.DELETE:
-            data.removeTask(id);
-            dom.updateTasks(data.getTaskList());
+        case UI.TASK_ACTION.DELETE:
+            Data.removeTask(id);
+            UI.updateTasks(Data.getTaskList());
             break;
     
-        case dom.TASK_ACTION.EDIT:
-            dom.startTaskEdit(event, data.getTaskValue(id));
+        case UI.TASK_ACTION.EDIT:
+            UI.startTaskEdit(event, Data.getTaskValue(id));
             break;
 
         default: // mark mode
-            data.toggleTaskDone(id);
-            dom.updateTasks(data.getTaskList());
+            Data.toggleTaskDone(id);
+            UI.updateTasks(Data.getTaskList());
             break;
     }
 };
 
 const handleDragEndTask = (event) => {
-    const {id, beforeId} = dom.endDrag(event);
+    const {id, beforeId} = UI.endDrag(event);
 
-    data.moveTask(id, beforeId);
-    dom.updateTasks(data.getTaskList());
+    Data.moveTask(id, beforeId);
+    UI.updateTasks(Data.getTaskList());
 };
 
 const handleClickRandomize = (event) => {
-    data.randomiseTasks();
-    dom.updateTasks(data.getTaskList());
+    Data.randomiseTasks();
+    UI.updateTasks(Data.getTaskList());
 };
 
 const handleEditTask = (event) => {
-    const {id, value} = dom.endTaskEdit(event);
+    const {id, value} = UI.endTaskEdit(event);
         
-    if ( value != data.getTaskValue(id) ) {
-        data.setTaskValue(id, value);
-        dom.updateTasks(data.getTaskList());
+    if ( value != Data.getTaskValue(id) ) {
+        Data.setTaskValue(id, value);
+        UI.updateTasks(Data.getTaskList());
     }
 }
 
 const handleNewTask = (event) => {
-    const value = dom.getAndClearTaskInput(event);
+    const value = UI.getAndClearTaskInput(event);
     
     if (!value || value == '') return;
     
-    data.addTasks(value.split(';'));
-    dom.updateTasks(data.getTaskList());
+    Data.addTasks(value.split(';'));
+    UI.updateTasks(Data.getTaskList());
 };
 
 
@@ -63,36 +63,36 @@ const handleNewTask = (event) => {
  * Register handler and connect up the application
  */
 document.addEventListener('DOMContentLoaded', () => {
-    const store = storage.initialise();
+    const store = Storage.initialise();
 
     // hacky for now...
-    data.setHandlers({ store });
+    Data.setHandlers({ store });
 
-    dom.setHandlers({
+    UI.setHandlers({
         onNewTask        : handleNewTask,
         onClickTask      : handleClickTask,
-        onDragStartTask  : dom.startDrag,
+        onDragStartTask  : UI.startDrag,
         onDragStartEnd   : handleDragEndTask,
-        onDragOverList   : dom.previewDrag,
+        onDragOverList   : UI.handleDrag,
         onChangeTaskEdit : handleEditTask,
         onClickRandomize : handleClickRandomize,
-        onClickHelp      : dom.showHelpModal
+        onClickHelp      : UI.showHelpModal
     });
 
     // restore tasks
-    data.load();
-    data.sortTasks();
-    dom.updateTasks(data.getTaskList())
+    Data.load();
+    Data.sortTasks();
+    UI.updateTasks(Data.getTaskList())
 
     // set focus to input by default
-    dom.setFocusToNewInput();
+    UI.setFocusToNewInput();
 
     // debug
-    if (data.getTaskList().length == 0) addTestTasks()
+    if (Data.getTaskList().length == 0) addTestTasks()
 });
 
 //debug...
 const addTestTasks = () => {
-    ['one: hello', 'two: a longer task', 'three: bye'].map( val => data.addTask(val));
-    dom.updateTasks(data.getTaskList());
+    ['one: hello', 'two: a longer task', 'three: bye'].map( val => Data.addTask(val));
+    UI.updateTasks(Data.getTaskList());
 }

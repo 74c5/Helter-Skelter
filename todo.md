@@ -1,26 +1,19 @@
-- [x] re-ordering
-    - [x] drag and drop
-    - [x] help dialog
+- [x] throttle or debounce on saveTasks and drag?
 
-- throttle or debounce on saveTasks and updateUI?
-
-- [x] refactor
-    - [x] separate dom & logic
-    - [x] module files (file is getting a bit long - all functions are available in root console)
+- refactor
+    - containerized object model?
     - completely separate dom (rename ui), data, storage
+        - use Lists in data module
         - all ui logic in on place
+            - append further update to queue if queue is already running
         - initialise and setCallbacks
         - sync accessors (onX from index) - semi-pubsub
-    - [x] separate storage module
-
-- [x] batch input
-    - [x] semicolon separated
-
 
 ## required tweaks
 
 ## ideas
 
+- throttle/debounce on update UI?
 
 - responsive design
     - test on small screen
