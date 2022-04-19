@@ -1,19 +1,21 @@
 - [x] throttle or debounce on saveTasks and drag?
 
 - refactor
-    - containerized object model?
+    - [] Use object factories to hide data
     - completely separate dom (rename ui), data, storage
-        - use Lists in data module
+        - sync accessors (onX from index) - semi-pubsub
         - all ui logic in on place
             - append further update to queue if queue is already running
         - initialise and setCallbacks
-        - sync accessors (onX from index) - semi-pubsub
+    - ?use Lists in data module
 
 ## required tweaks
 
 ## ideas
 
-- throttle/debounce on update UI?
+- Separate controls and task list View
+
+- throttle/debounce on update UI? needed? does this make sense...
 
 - responsive design
     - test on small screen
@@ -22,7 +24,7 @@
 
 - pending updates flag in data... this can be used to determine if updates to data?
     - or subscribe to changes via... callback pushed to data
-- enter multi-line tasks?
+
 - wrap lines for very long tasks
 
 - keyboard controls

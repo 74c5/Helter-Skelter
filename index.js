@@ -1,98 +1,98 @@
-import * as Data from "./data.js";
-import * as UI from "./dom.js";
+import * as Tasks from "./TasksData.js";
+import * as ListView from "./TasksUI.js";
 import * as Storage from "./Storage.js"
-
-// todo: move to ui?
-
-/**
- * Task click event handler.
- * Handles checking (done), triggering edits and deleting.
- */
-const handleClickTask = (event) => {
-    const {action, id} = UI.getClickTaskAction(event);
-// console.log(`click action: ${action}, ${id}`);
-    switch (action) {
-        case UI.TASK_ACTION.DELETE:
-            Data.removeTask(id);
-            UI.updateTasks(Data.getTaskList());
-            break;
-    
-        case UI.TASK_ACTION.EDIT:
-            UI.startTaskEdit(event, Data.getTaskValue(id));
-            break;
-
-        default: // mark mode
-            Data.toggleTaskDone(id);
-            UI.updateTasks(Data.getTaskList());
-            break;
-    }
-};
-
-const handleDragEndTask = (event) => {
-    const {id, beforeId} = UI.endDrag(event);
-
-    Data.moveTask(id, beforeId);
-    UI.updateTasks(Data.getTaskList());
-};
-
-const handleClickRandomize = (event) => {
-    Data.randomiseTasks();
-    UI.updateTasks(Data.getTaskList());
-};
-
-const handleEditTask = (event) => {
-    const {id, value} = UI.endTaskEdit(event);
-        
-    if ( value != Data.getTaskValue(id) ) {
-        Data.setTaskValue(id, value);
-        UI.updateTasks(Data.getTaskList());
-    }
-}
-
-const handleNewTask = (event) => {
-    const value = UI.getAndClearTaskInput(event);
-    
-    if (!value || value == '') return;
-    
-    Data.addTasks(value.split(';'));
-    UI.updateTasks(Data.getTaskList());
-};
 
 
 /**
  * Register handler and connect up the application
  */
 document.addEventListener('DOMContentLoaded', () => {
+    //debug...
+    const addTestTasks = () => {
+        ['one: hello', 'two: a longer task', 'three: bye'].map( val => tasks.add(val));
+        ListView.update(tasks.get());
+    }
+
+    // todo: move to ui?
+    /**
+     * Task click event handler.
+     * Handles checking (done), triggering edits and deleting.
+     */
+    const handleClickTask = (event) => {
+        const {action, id} = ListView.getClickTaskAction(event);
+    // console.log(`click action: ${action}, ${id}`);
+        switch (action) {
+            case ListView.TASK_ACTION.DELETE:
+                tasks.remove(id);
+                listUI.update(tasks.get());
+                break;
+        
+            case ListView.TASK_ACTION.EDIT:
+                listUI.startEdit(event);
+                break;
+
+            default: // mark mode
+                tasks.toggleDone(id);
+                listUI.update(tasks.get());
+                break;
+        }
+    };
+
+    const handleDragEndTask = (event) => {
+        const {moved, id, beforeId} = listUI.endDrag(event);
+
+        if (moved) {
+            tasks.move({id, beforeId});
+            listUI.update(tasks.get());
+        }
+    };
+
+    const handleClickRandomize = (event) => {
+        tasks.randomise();
+        listUI.update(tasks.get());
+    };
+
+    const handleEditTask = (event) => {
+        const {id, value, changed} = listUI.endEdit(event);
+        if ( changed ) {
+            tasks.setValue({id, value});
+            listUI.update(tasks.get());
+        }
+    }
+
+    const handleNewTask = (event) => {
+        const value = ListView.getAndClearTaskInput(event);
+        
+        if (!value || value == '') return;
+        
+        for (const val of value.split(';')) tasks.add(val);
+        listUI.update(tasks.get());
+    };
+
+    // start of code to keep
     const store = Storage.initialise();
 
     // hacky for now...
-    Data.setHandlers({ store });
-
-    UI.setHandlers({
-        onNewTask        : handleNewTask,
-        onClickTask      : handleClickTask,
-        onDragStartTask  : UI.startDrag,
-        onDragStartEnd   : handleDragEndTask,
-        onDragOverList   : UI.handleDrag,
-        onChangeTaskEdit : handleEditTask,
-        onClickRandomize : handleClickRandomize,
-        onClickHelp      : UI.showHelpModal
+    const tasks = Tasks.initialise(store);
+    const listUI = ListView.create({
+            onNewTask        : handleNewTask,
+            onClickTask      : handleClickTask,
+            onDragEndTask    : handleDragEndTask,
+            onChangeTaskEdit : handleEditTask,
+            onClickRandomize : handleClickRandomize,
+            onClickHelp      : ListView.showHelpModal
     });
+    listUI.initialise();
+
 
     // restore tasks
-    Data.load();
-    Data.sortTasks();
-    UI.updateTasks(Data.getTaskList())
+    //tasks.load();
+    tasks.sort();
+    listUI.update(tasks.get());
 
     // set focus to input by default
-    UI.setFocusToNewInput();
+    ListView.setFocusToNewInput();
 
     // debug
-    if (Data.getTaskList().length == 0) addTestTasks()
+    if (tasks.get().length == 0) addTestTasks()
 });
-
-//debug...
-const addTestTasks = () => {
-    ['one: hello', 'two: a longer task', 'three: bye'].map( val => Data.addTask(val));
-    UI.updateTasks(Data.getTaskList());
-}
