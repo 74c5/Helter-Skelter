@@ -5,7 +5,7 @@
 
 import * as Utils from "./Utils.js";
 
-export const initialise = () => {
+export const create = () => {
     
     const save = (list, name='helter-skelter') => {
         localStorage.setItem(name, JSON.stringify(list));
@@ -17,7 +17,7 @@ export const initialise = () => {
 
     // public interface
     return {
-        save : Utils.throttle(save, 1000),   // args: array of objects to save
+        save : Utils.throttle(1000)(save),   // args: array of objects to save
         load                                 // returns: array of objects
     }
 }

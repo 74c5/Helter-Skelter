@@ -1,34 +1,44 @@
-const STORE_NAME = 'tasks';
-
 // initialise with an array of task data
-export const initialise = (store) => {
+export const create = () => {
     /* private state */
-    let list = store.load(STORE_NAME) || [];
+    const callbacks = {
+        update : undefined,
+    }
+    let list   = []
     let nextID = (list.length > 0)? Math.max(...list.map(t => t.id.slice(5))) + 1 : 1;
 
+    /* functions */
+    const initialise = (tasks, {updateCB}) => {
+        list = tasks;
+        callbacks.update = updateCB;
+        callbacks.update(list);
+    }
+
     const add = (value) => {
-        list.push({id : `task-${nextID}`, isDone: false, value});
-        nextID++;
-        store.save(list, STORE_NAME);
+        for (const val of value.split(';')) {
+            list.push({id : `task-${nextID}`, isDone: false, value: val});
+            nextID++;
+        }
+        callbacks.update(list)
     };
 
     const remove = (id) => {
         const index = list.findIndex( t => t.id == id );
         list = [...list.slice(0,index), ...list.slice(index+1)];
-        store.save(list, STORE_NAME);
+        callbacks.update(list)
     };
 
     const setValue = ({id, value}) => {
         const task = list.find( t => t.id == id);
         task.value  = value;
         task.isDone = false; // modified tasks are incomplete
-        store.save(list, STORE_NAME);
+        callbacks.update(list)
     }
 
     const toggleDone = (id) => {
         const task = list.find( t => t.id == id);
         task.isDone = !task.isDone;
-        store.save(list, STORE_NAME);
+        callbacks.update(list)
     };
 
     const move = ({id, beforeId}) => {
@@ -41,7 +51,7 @@ export const initialise = (store) => {
             const task = list[tI];
             list = [...list.slice(0,tI), ...list.slice(tI+1)];  // remove task from list
             list.splice(nI, 0, task);                           // re-add at new index
-            store.save(list, STORE_NAME);
+            callbacks.update(list)
         }
 
     };
@@ -54,7 +64,7 @@ export const initialise = (store) => {
         let changed = !sorted.every( (v, i) => v === list[i] );
         if (changed) {
             list = sorted;
-            store.save(list, STORE_NAME);
+            callbacks.update(list)
         }
     }
 
@@ -77,7 +87,7 @@ export const initialise = (store) => {
         let changed = !shuffle.every( (v, i) => v === list[i] );
         if (changed) {
             list = shuffle;
-            store.save(list, 'tasks');
+            callbacks.update(list);
         }
     }
 
@@ -86,6 +96,7 @@ export const initialise = (store) => {
         add,                // args: value
         setValue,           // args: {id, value}
         get : () => [...list],  // temp...
+        initialise,         // args [...tasks], {updateCB}
         move,               // args: {id, value}
         remove,             // args: id
         toggleDone,         // args: id

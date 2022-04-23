@@ -1,29 +1,27 @@
 import * as List from "./List.js";
 import * as Utils from "./Utils.js";
 
-// interface constants
-export const TASK_ACTION = Object.freeze({
-    EDIT        : 'edit',   
-    DELETE      : 'delete',  
-    MARK        : 'mark'            // mark/unmark isDone
-});
-
 // internal constants
+const CLICK_ACTION = {
+    DELETE: 'delete', 
+    EDIT: 'edit', 
+    MOVE: 'move'
+}
+
 const ANIMATION = Object.freeze({
     SHORT_DELAY : 10,   // pause required for dom change to register, before applying additional classes, etc.
     CYCLE_DELAY : 500,  // pause required for full transition
     INPUT_DELAY : 250   // delay additional input on component following a change of state
 });
 
-export const create = ({onNewTask, onClickTask, onDragEndTask, onChangeTaskEdit, onClickRandomize, onClickHelp}) => {
+export const create = () => {
     /* private internal state */
     const handlers = {
-        onNewTask,
-        onClickTask,
-        onDragEndTask,
-        onChangeTaskEdit,
-        onClickRandomize,
-        onClickHelp
+        onChange    : undefined,
+        onClick     : undefined,
+        onDrag      : undefined,
+        onDragEnd   : undefined,
+        onDragStart : undefined,
     };
     
     // linked (type) list which mirrors dom elements
@@ -32,17 +30,82 @@ export const create = ({onNewTask, onClickTask, onDragEndTask, onChangeTaskEdit,
     let dragged, before;    
     let isDragging = false;
 
-    const input     = document.querySelector('#input-new-task');
-    const list      = document.querySelector('#list-tasks');
-    const randomBtn = document.querySelector('#btn-randomize');
-    const helpBtn   = document.querySelector('#btn-help');
+    const list = document.querySelector('#list-tasks');
     
-    const initialise = () => {
+    const initialise = ({moveCB, setValueCB, removeCB, toggleDoneCB}) => {
+        handlers.onDragEnd = (event) => {
+            isDragging = false;
+
+            endDrag(dragged.el, before?.el)
+            
+            if (dragged && dragged.next != before) {
+                moveCB({id: dragged.id, beforeId: before?.id});
+            }
+        };
+
+        handlers.onChange = (event) => {
+            const {id, textValue, inputValue} = endChange(event, handlers);
+            if ( inputValue != textValue ) setValueCB({id, value: inputValue});
+        }
+    
+        handlers.onClick = (event) => {
+            const {id, action} = getClickAction(event);
+
+            switch (action) {
+                case CLICK_ACTION.DELETE: 
+                    removeCB(id);
+                    return;
+                case CLICK_ACTION.EDIT:
+                    startEdit(event, handlers);
+                    return;
+                default:
+                    // mark done
+                    toggleDoneCB(id);
+            }
+        };
+
+        handlers.onDragStart = (event) => {
+            isDragging = true;
+            dragged = domList.find(startDrag(event));
+            if (!dragged) {
+                console.error(`Trying to drag task, ${task.id}, which does not exist in dom list`);
+            }
+        }
+
+        // drag handler
+        // handlers.onDrag = Utils.debounce( 
+        handlers.onDrag = Utils.debounce(50)(({y}) => {
+                // ({y}) => {
+                if (!isDragging) return; // dragging is complete, abort this queued response
+
+                //find closest element below the drag point (y)
+                const prevBefore = before;
+                before = undefined;
+                let distance = Number.NEGATIVE_INFINITY;
+                let dn = domList.first();
+                while (dn) {
+                    if (dn.id != dragged.id) {  // skip the dragged item in the list
+                        const box  = dn.el.getBoundingClientRect();
+                        const dist = y - box.y - box.height / 2;
+                        // cursor is above the element
+                        if (dist <= 0 && dist > distance) {
+                            distance = dist;
+                            before = dn;
+                        }
+                    }
+                    dn = dn.next;
+                }
+            
+                if (before?.id != prevBefore?.id) {
+                    updateDrag(before?.el, prevBefore?.el);
+                }
+            }
+        );
+        // , 50);
+
+    
         // add event listeners
-        input.addEventListener('change', handlers.onNewTask);
-        list.addEventListener('dragover', onDragUpdate);
-        randomBtn.addEventListener('click', handlers.onClickRandomize);
-        helpBtn.addEventListener('click', handlers.onClickHelp);
+        list.addEventListener('dragover', handlers.onDrag);
     }
 
     /**
@@ -78,7 +141,7 @@ export const create = ({onNewTask, onClickTask, onDragEndTask, onChangeTaskEdit,
                     modifications.push({el: dn.el, value: dn.value, isDone: dn.isDone})
                 }
             } else { // this is a new task - push onto end of dom list
-                const taskEl = createTask(tn, handlers.onClickTask, onDragStart, handlers.onDragEndTask)
+                const taskEl = createTask(tn, handlers)
                 dn = List.node({...tn, el: taskEl});
                 domList.append(dn);
                 additions.push(dn.el);
@@ -138,7 +201,7 @@ export const create = ({onNewTask, onClickTask, onDragEndTask, onChangeTaskEdit,
             };
         };
 
-        if (removes.length > 0)       queue.push(...createRemoveQueue(removes, handlers.onClick, onDragStart, handlers.onDragEndTask));
+        if (removes.length > 0)       queue.push(...createRemoveQueue(removes, handlers));
         if (modifications.length > 0) queue.push(...createModificationQueue(modifications));
         if (additions.length > 0)     queue.push(...createAppendQueue(additions));
         if (shuffles.length > 0)      queue.push(...createMoveQueue(shuffles, moves));
@@ -146,142 +209,16 @@ export const create = ({onNewTask, onClickTask, onDragEndTask, onChangeTaskEdit,
         animateQueue(queue);    
     }
 
-    const onDragStart = (event) => {
-        const task = event.currentTarget;
-        isDragging = true;
-        dragged = domList.find(task.id);
-        if (dragged) {
-            dragged.el.classList.add("dragging");
-        } else {
-            console.error(`Trying to drag task, ${task.id}, which does not exist in dom list`);
-        }
-    }
-    
-    const onDragEnd = (event) => {
-        isDragging = false;
-    
-        // clear dragging classes
-        dragged.el.classList.remove('dragging');
-        if (before) {
-            before.el.classList.remove('insert-before');
-        }
-    
-        return {
-            moved    : dragged.next != before,
-            id       : dragged.id,
-            beforeId : before? before.id : ''
-        };
-    };
-    
-    // debounced task to update list based on drag location
-    const updateDrag = Utils.debounce( (y) => {
-        // if dragging is complete, then this is a queued response abort
-        if (!isDragging) return;
-    
-        //find closest element below the drag point (y)
-        const prevBefore = before;
-        before = undefined;
-        let distance = Number.NEGATIVE_INFINITY;
-        let dn = domList.first();
-        while (dn) {
-            if (dn.id != dragged.id) {  // skip the dragged item in the list
-                const box  = dn.el.getBoundingClientRect();
-                const dist = y - box.y - box.height / 2;
-                // cursor is above the element
-                if (dist <= 0 && dist > distance) {
-                    distance = dist;
-                    before = dn;
-                }
-            }
-            dn = dn.next;
-        }
-    
-        if (before?.id != prevBefore?.id) {
-            if (before) before.el.classList.add('insert-before');
-            if (prevBefore) prevBefore.el.classList.remove('insert-before');
-        }
-    }, 50);
-    
-    // drag handler
-    const onDragUpdate = (event) => {
-        event.preventDefault();
-        updateDrag(event.y);
-    }
-
-    const startEdit = (event) => {
-        const task  = event.currentTarget;
-        const text  = task.querySelector('.text-task');
-        const input = task.querySelector('.input-edit-task');
-    
-        const width = text.offsetWidth;
-        input.style.width = `${width}px`;
-    
-        input.value = text.textContent;
-    
-        // switch event handlers
-        input.addEventListener('change', handlers.onChangeTaskEdit);
-        input.addEventListener('blur', handlers.onChangeTaskEdit);
-        task.removeEventListener('click', handlers.onClickTask);
-    
-        //switch out boxes
-        const queue = [
-            { action: () => { text.classList.add('removed');
-                              input.classList.remove('removed'); },
-              delay : ANIMATION.SHORT_DELAY
-            }, {
-              action : () => { text.classList.add('hidden');
-                               input.classList.remove('hidden');
-                               input.focus(); },
-              delay  : ANIMATION.SHORT_DELAY
-            }
-        ];
-        animateQueue(queue);
-    }
-    
-    const endEdit = (event) => {
-        const input = event.currentTarget;
-        const task  = input.parentElement;
-        const text  = task.querySelector('.text-task');
-        const id    = task.id;
-    
-        input.removeEventListener('change', handlers.onChangeTaskEdit);
-        input.removeEventListener('blur', handlers.onChangeTaskEdit);
-        // The timeout, prevents clicking outside of input from triggering new immediate event. (not ideal, but works)
-        setTimeout(() => {task.addEventListener('click', handlers.onClickTask);}, ANIMATION.INPUT_DELAY)
-        
-        const queue = [
-            {
-                action : () => { text.classList.remove('removed');
-                                 input.classList.add('removed'); },
-                delay  : ANIMATION.SHORT_DELAY
-            },{
-                action : () => { text.classList.remove('hidden');
-                                 input.classList.add('hidden');  },
-                delay  : ANIMATION.SHORT_DELAY
-            }
-            
-        ];
-        animateQueue(queue);
-        return {id, value: input.value, changed: input.value != text.textContent};
-    };
-    
-
-
-
     /* public interface */
     return {
         initialise,
         update,
-        endDrag    : onDragEnd,
-        startEdit,
-        endEdit,
-        handleDrag : onDragUpdate
     }
 }
 
 
-// utility functions
-const createTask = ({id, value, isDone}, onClick, onDragStart, onDragEnd) => {
+// utility functions - contains actual manipulation of DOM
+const createTask = ({id, value, isDone}, handlers) => {
     const task = document.createElement('div');
     task.id = id;
     task.classList.add('task');
@@ -301,14 +238,14 @@ const createTask = ({id, value, isDone}, onClick, onDragStart, onDragEnd) => {
         </div>`
 
     task.querySelector('.text-task').textContent = value;
-    task.addEventListener('click', onClick);
-    task.addEventListener('dragstart', onDragStart);
-    task.addEventListener('dragend', onDragEnd);
+    task.addEventListener('click', handlers.onClick);
+    task.addEventListener('dragstart', handlers.onDragStart);
+    task.addEventListener('dragend', handlers.onDragEnd);
     
     return task;
 };
 
-const createRemoveQueue = (removes, onClick, onDragStart, onDragEnd) => {
+const createRemoveQueue = (removes, handlers) => {
     const queue = [
         {
             action: () => { removes.forEach( el => { el.classList.add('hidden'); }) },
@@ -319,9 +256,9 @@ const createRemoveQueue = (removes, onClick, onDragStart, onDragEnd) => {
         },{
             action : () => {
                 removes.forEach( el => {
-                    el.removeEventListener('click', onClick);
-                    el.removeEventListener('dragstart', onDragStart);
-                    el.removeEventListener('dragend', onDragEnd);
+                    el.removeEventListener('click', handlers.onClick);
+                    el.removeEventListener('dragstart', handlers.onDragStart);
+                    el.removeEventListener('dragend', handlers.onDragEnd);
                     el.remove();
                 });
             },
@@ -369,7 +306,6 @@ const createAppendQueue = (additions) => {
     return queue;
 };
 
-
 const createMoveQueue = (shuffles, moves) => {
     const queue = [
         {
@@ -393,110 +329,87 @@ const createMoveQueue = (shuffles, moves) => {
     return queue;
 }
 
-
-export const getClickTaskAction = (event) => {
-    const result = {
-        action : TASK_ACTION.MARK,        // default
-        id     : event.currentTarget.id
-    };
-
-    const targetClassList = (event.target.tagName == 'SPAN')? event.target.parentNode.classList : event.target.classList;
-    
-    if (targetClassList.contains('btn-delete-task')) result.action = TASK_ACTION.DELETE;
-
-    if (targetClassList.contains('btn-edit-task')) result.action = TASK_ACTION.EDIT;
-
-    return result;
+const startDrag = (event) => {
+    return event.currentTarget?.id;
 }
 
-export const startDrag = (event) => {
-    const task = event.currentTarget;
-    isDragging = true;
-    dragged = domList.find(task.id);
-    if (dragged) {
-        dragged.el.classList.add("dragging");
-    } else {
-        console.error(`Trying to drag task, ${task.id}, which does not exist in dom list`);
-    }
-}
-
-export const endDrag = (event) => {
-    isDragging = false;
-
+const endDrag = (draggedEl, beforeEl) => {
     // clear dragging classes
-    dragged.el.classList.remove('dragging');
-    if (before) {
-        before.el.classList.remove('insert-before');
+    draggedEl.classList.remove('dragging');
+    if (beforeEl) {
+        beforeEl.classList.remove('insert-before');
     }
+}
 
-    return {
-        moved    : dragged.next != before,
-        id       : dragged.id,
-        beforeId : before? before.id : ''
-    };
-};
+const updateDrag = (beforeEl, prevBeforeEl) => {
+    if (beforeEl) beforeEl.classList.add('insert-before');
+    if (prevBeforeEl) prevBeforeEl.classList.remove('insert-before');
+}
 
-// debounced task to update list based on drag location
-const updateDrag = Utils.debounce( (y) => {
-    // if dragging is complete, then this is a queued response abort
-    if (!isDragging) return;
+const startEdit = (event, {onChange, onClick}) => {
+    const task  = event.currentTarget;
+    const text  = task.querySelector('.text-task');
+    const input = task.querySelector('.input-edit-task');
 
-    //find closest element below the drag point (y)
-    const prevBefore = before;
-    before = undefined;
-    let distance = Number.NEGATIVE_INFINITY;
-    let dn = domList.first();
-    while (dn) {
-        if (dn.id != dragged.id) {  // skip the dragged item in the list
-            const box  = dn.el.getBoundingClientRect();
-            const dist = y - box.y - box.height / 2;
-            // cursor is above the element
-            if (dist <= 0 && dist > distance) {
-                distance = dist;
-                before = dn;
-            }
+    const width = text.offsetWidth;
+    input.style.width = `${width}px`;
+
+    input.value = text.textContent;
+
+    // switch event handlers
+    input.addEventListener('change', onChange);
+    input.addEventListener('blur', onChange);
+    task.removeEventListener('click', onClick);
+
+    //switch out boxes
+    const queue = [
+        { action: () => { text.classList.add('removed');
+                          input.classList.remove('removed'); },
+          delay : ANIMATION.SHORT_DELAY
+        }, {
+          action : () => { text.classList.add('hidden');
+                           input.classList.remove('hidden');
+                           input.focus(); },
+          delay  : ANIMATION.SHORT_DELAY
         }
-        dn = dn.next;
-    }
-
-    if (before?.id != prevBefore?.id) {
-        if (before) before.el.classList.add('insert-before');
-        if (prevBefore) prevBefore.el.classList.remove('insert-before');
-    }
-}, 50);
-
-// drag handler
-export const handleDrag = (event) => {
-    event.preventDefault();
-    updateDrag(event.y);
+    ];
+    animateQueue(queue);
 }
 
-export const showHelpModal = () => {
-    const modal = document.querySelector('#modal-help');
+const endChange = (event, {onChange, onClick}) => {
+    const input = event.currentTarget;
+    const task  = input.parentElement;
+    const text  = task.querySelector('.text-task');
 
-    if (modal.classList.contains('off-screen-left')) {
-        // show the modal
-        modal.classList.remove('off-screen-left');  // remove the class
-        modal.addEventListener('click', showHelpModal); // re-trigger for click anywhere on screen
-    } else {
-        // hide the modal
-        modal.classList.add('off-screen-left');  // re-add the class
-        modal.removeEventListener('click', showHelpModal); // remove modal level trigger
-    }
+    input.removeEventListener('change', onChange);
+    input.removeEventListener('blur', onChange);
+    // The timeout, prevents clicking outside of input from triggering new immediate event. (not ideal, but works)
+    setTimeout(() => {task.addEventListener('click', onClick);}, ANIMATION.INPUT_DELAY)
+    
+    const queue = [
+        {
+            action : () => { text.classList.remove('removed');
+                             input.classList.add('removed'); },
+            delay  : ANIMATION.SHORT_DELAY
+        },{
+            action : () => { text.classList.remove('hidden');
+                             input.classList.add('hidden');  },
+            delay  : ANIMATION.SHORT_DELAY
+        }
+        
+    ];
+    animateQueue(queue);
+
+    return {id: task.id, textValue: text.textContent, inputValue: input.value};
 }
 
-export const getAndClearTaskInput = (event) => {
-    event.stopPropagation();
-    event.preventDefault();
-    const value = event.currentTarget.value;
-
-    event.currentTarget.value = '';
-    return value;
-}
-
-export const setFocusToNewInput = () => {
-    const input = document.querySelector('#input-new-task');
-    input.focus();
+const getClickAction = (event) => {
+    const id = event.currentTarget.id;
+    const classList = (event.target.tagName == 'SPAN')? event.target.parentNode.classList : event.target.classList;
+    
+    if (classList.contains('btn-delete-task')) return {id, action: CLICK_ACTION.DELETE};
+    if (classList.contains('btn-edit-task')) return {id, action: CLICK_ACTION.EDIT};
+    return {id, action: CLICK_ACTION.MOVE};
 }
 
 // queue is an array of objects of form {action, delay}, where action is function and delay is the delay before the next function

@@ -1,17 +1,21 @@
 - [x] throttle or debounce on saveTasks and drag?
 
 - refactor
-    - [] Use object factories to hide data
-    - completely separate dom (rename ui), data, storage
-        - sync accessors (onX from index) - semi-pubsub
-        - all ui logic in on place
+    - [x] Use object factories to hide data
+    - [x] completely separate dom (rename UI), data, storage
+        - [x] all ui logic in on place
+        - [x] TasksUI
             - append further update to queue if queue is already running
-        - initialise and setCallbacks
+        - [x] ControlsUI
+        - [x] link accessors and callback handlers? (onX from index) - (semi-pubsub)
+            - [x] finish moving dom manipulation outside for TasksUI manager...
     - ?use Lists in data module
 
 ## required tweaks
 
 ## ideas
+
+- debounce listUI.update
 
 - Separate controls and task list View
 
