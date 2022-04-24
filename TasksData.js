@@ -5,11 +5,12 @@ export const create = () => {
         update : undefined,
     }
     let list   = []
-    let nextID = (list.length > 0)? Math.max(...list.map(t => t.id.slice(5))) + 1 : 1;
+    let nextID = 1;
 
     /* functions */
     const initialise = (tasks, {updateCB}) => {
-        list = tasks;
+        list   = tasks;
+        nextID = (list.length > 0)? Math.max(...list.map(t => t.id.slice(5))) + 1 : 1;
         callbacks.update = updateCB;
         callbacks.update(list);
     }

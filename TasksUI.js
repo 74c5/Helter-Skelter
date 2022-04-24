@@ -29,6 +29,8 @@ export const create = () => {
     // dragging variables
     let dragged, before;    
     let isDragging = false;
+    // animation queue
+    const queue = [];
 
     const list = document.querySelector('#list-tasks');
     
@@ -44,7 +46,8 @@ export const create = () => {
         };
 
         handlers.onChange = (event) => {
-            const {id, textValue, inputValue} = endChange(event, handlers);
+            const {id, textValue, inputValue, queue: nextQueue} = endChange(event, handlers);
+            addAnimation(queue,nextQueue);
             if ( inputValue != textValue ) setValueCB({id, value: inputValue});
         }
     
@@ -56,7 +59,7 @@ export const create = () => {
                     removeCB(id);
                     return;
                 case CLICK_ACTION.EDIT:
-                    startEdit(event, handlers);
+                    addAnimation(queue, startEdit(event, handlers));
                     return;
                 default:
                     // mark done
@@ -114,7 +117,6 @@ export const create = () => {
      */
     const update = (tasks) => {
         const taskList = List.create(tasks.map( t => List.node(t) ));
-        const queue = [];
 
         // handle deleted tasks
         const removes = [];
@@ -201,12 +203,10 @@ export const create = () => {
             };
         };
 
-        if (removes.length > 0)       queue.push(...createRemoveQueue(removes, handlers));
-        if (modifications.length > 0) queue.push(...createModificationQueue(modifications));
-        if (additions.length > 0)     queue.push(...createAppendQueue(additions));
-        if (shuffles.length > 0)      queue.push(...createMoveQueue(shuffles, moves));
-
-        animateQueue(queue);    
+        if (removes.length > 0)       addAnimation(queue, createRemoveQueue(removes, handlers));
+        if (modifications.length > 0) addAnimation(queue, createModificationQueue(modifications));
+        if (additions.length > 0)     addAnimation(queue, createAppendQueue(additions));
+        if (shuffles.length > 0)      addAnimation(queue, createMoveQueue(shuffles, moves));
     }
 
     /* public interface */
@@ -362,7 +362,7 @@ const startEdit = (event, {onChange, onClick}) => {
     task.removeEventListener('click', onClick);
 
     //switch out boxes
-    const queue = [
+    return [
         { action: () => { text.classList.add('removed');
                           input.classList.remove('removed'); },
           delay : ANIMATION.SHORT_DELAY
@@ -372,9 +372,7 @@ const startEdit = (event, {onChange, onClick}) => {
                            input.focus(); },
           delay  : ANIMATION.SHORT_DELAY
         }
-    ];
-    animateQueue(queue);
-}
+    ];}
 
 const endChange = (event, {onChange, onClick}) => {
     const input = event.currentTarget;
@@ -398,9 +396,7 @@ const endChange = (event, {onChange, onClick}) => {
         }
         
     ];
-    animateQueue(queue);
-
-    return {id: task.id, textValue: text.textContent, inputValue: input.value};
+    return {id: task.id, textValue: text.textContent, inputValue: input.value, queue};
 }
 
 const getClickAction = (event) => {
@@ -412,12 +408,17 @@ const getClickAction = (event) => {
     return {id, action: CLICK_ACTION.MOVE};
 }
 
-// queue is an array of objects of form {action, delay}, where action is function and delay is the delay before the next function
-const animateQueue = (queue) => {
+// queue is an FIFO objects of form {action, delay}, where action is a function and delay is the wait time before the next function call.
+const addAnimation = (queue, next) => {
+    queue.push(...next);
+    if (queue.length == next.length) animate(queue);
+}
+
+const animate = (queue) => {
     if (queue.length == 0) return;
     // perform the the current function in the queue
     const {action, delay} = queue.shift();
     action();
     // schedule the next function
-    setTimeout( () => { animateQueue(queue) }, delay );
+    setTimeout( () => { animate(queue) }, delay );
 }

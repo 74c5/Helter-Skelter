@@ -1,33 +1,29 @@
-- [x] throttle or debounce on saveTasks and drag?
-
-- refactor
+- [x] Refactor 2
     - [x] Use object factories to hide data
     - [x] completely separate dom (rename UI), data, storage
         - [x] all ui logic in on place
         - [x] TasksUI
-            - append further update to queue if queue is already running
+            - [x] append further update to queue if queue is already running
         - [x] ControlsUI
+            - Separate controls and task list View
         - [x] link accessors and callback handlers? (onX from index) - (semi-pubsub)
             - [x] finish moving dom manipulation outside for TasksUI manager...
+
+- refactor 3
     - ?use Lists in data module
+    - debounce listUI.update
 
 ## required tweaks
 
 ## ideas
 
-- debounce listUI.update
-
-- Separate controls and task list View
-
-- throttle/debounce on update UI? needed? does this make sense...
+- package into app and host
+    - snowpack?
 
 - responsive design
     - test on small screen
 
 - PWA support
-
-- pending updates flag in data... this can be used to determine if updates to data?
-    - or subscribe to changes via... callback pushed to data
 
 - wrap lines for very long tasks
 
